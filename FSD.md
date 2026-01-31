@@ -136,6 +136,8 @@ Create a wearable electronic badge (SAO - Simple Add-On format) that encourages 
 | READ_RESP   | 0x11  | Response with encounter data (chunked) |
 | SET_LEVEL   | 0x12  | Temporarily set target badge's display level |
 | LEVEL_ACK   | 0x13  | Confirm level override applied |
+| LED_CMD     | 0x20  | Remote LED control (broadcast or targeted) |
+| LED_ACK     | 0x21  | Confirm LED command received |
 
 ### 4.4 Handshake Sequences
 
@@ -159,6 +161,30 @@ Create a wearable electronic badge (SAO - Simple Add-On format) that encourages 
 1. Organizer sends SET_LEVEL with target ID and desired level (1-5)
 2. Target badge stores override in RAM, sends LEVEL_ACK
 3. Target badge displays overridden level until power cycle
+
+#### Organizer Remote LED Control (Optional)
+1. Organizer sends LED_CMD with parameters:
+   - Target: specific badge ID or 0x0000 for broadcast
+   - Mode: predefined pattern or direct RGB value
+   - Duration: how long to override (0 = until next command)
+2. Target badge(s) execute LED command, send LED_ACK (if targeted)
+3. After duration expires, badge returns to normal level display
+
+**LED_CMD Modes:**
+| Mode | Value | Effect |
+|------|-------|--------|
+| OFF      | 0x00 | Turn LED off |
+| SOLID    | 0x01 | Solid color (RGB in payload) |
+| FLASH    | 0x02 | Flash color (RGB + rate in payload) |
+| RAINBOW  | 0x03 | Rainbow cycle |
+| PULSE    | 0x04 | Breathing pulse (RGB in payload) |
+| RESTORE  | 0xFF | Return to normal operation |
+
+**Use cases:**
+- Synchronized light show at event
+- Flash all badges for announcements
+- Highlight winner/special guest
+- "Find me" beacon for lost badge
 
 ### 4.5 Collision Avoidance
 - Random delay (100-500ms) before responding to beacons
@@ -203,8 +229,8 @@ When organizer reads encounters from a badge, the data can be output via:
 #### Organizer Badge
 | Action | Function |
 |--------|----------|
-| Short press | Cycle admin modes: normal → read → set level |
-| Double press | Force beacon + skip cooldown |
+| Short press | Cycle admin modes: normal → read → set level → LED control |
+| Double press | Execute current mode (send read/set/LED command) |
 | Long press (3s) | Reset encounters (same as regular)
 
 ---
@@ -266,6 +292,7 @@ When organizer reads encounters from a badge, the data can be output via:
 - [ ] Read encounters from target badge
 - [ ] Level override command
 - [ ] Admin mode switching via button
+- [ ] Remote LED control (optional)
 
 ### Phase 5: Power Optimization
 - [ ] Sleep mode implementation

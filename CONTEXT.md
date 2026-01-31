@@ -12,7 +12,7 @@ Social interaction game badge based on CH32V003 microcontroller using IR communi
 
 ### Badge Types
 1. **Regular Badge**: Player badge, collects encounters, shows level
-2. **Organizer Badge**: Admin functions - read encounters, set level override
+2. **Organizer Badge**: Admin functions - read encounters, set level override, remote LED control
 
 ### Hardware
 - CH32V003F4U6 (TSSOP-20)
