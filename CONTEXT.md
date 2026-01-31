@@ -17,7 +17,10 @@ Social interaction game badge based on CH32V003 microcontroller using IR communi
 ### Hardware
 - CH32V003F4U6 (TSSOP-20)
 - IR TX (940nm) + IR RX (TSOP38238, 38kHz)
-- RGB LED (WS2812B or discrete)
+- LED options (compile-time config):
+  - Option A: 1x RGB (WS2812B) - level via color/pattern
+  - Option B: 5x RGB (WS2812B) - level via LED count
+  - Option C: 5x single-color LEDs - level via LED count
 - Tactile button
 - Optional piezo buzzer
 

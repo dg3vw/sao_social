@@ -31,9 +31,26 @@ Create a wearable electronic badge (SAO - Simple Add-On format) that encourages 
 - Active-low output signal
 - Connected to interrupt-capable GPIO
 
-### 2.4 Status LED
-- Single RGB LED (common cathode) or multiple single-color LEDs
-- Used for visual feedback and status indication
+### 2.4 Status LEDs
+
+Three hardware configurations supported:
+
+#### Option A: Single RGB LED
+- 1x WS2812B or discrete RGB LED
+- Level shown via color/pattern
+- Compact, minimal GPIOs
+
+#### Option B: 5x RGB LEDs
+- 5x WS2812B in row/arc
+- Level shown by number of lit LEDs (1-5)
+- Each LED can show different colors for effects
+
+#### Option C: 5x Single-Color LEDs
+- 5x discrete LEDs (e.g., all same color or gradient)
+- Level shown by number of lit LEDs (1-5)
+- Simple, low cost, no protocol overhead
+
+**Compile-time configuration** via `#define LED_CONFIG_X`
 
 ### 2.5 Buzzer (Optional)
 - Small piezo buzzer for audio feedback
@@ -81,13 +98,34 @@ Create a wearable electronic badge (SAO - Simple Add-On format) that encourages 
 - Encounters persist across power cycles until user reset
 
 ### 3.4 Encounter Levels
-| Encounters | Level | LED Pattern |
-|------------|-------|-------------|
-| 0-4        | 1 - Newcomer | Slow pulse (1Hz) |
-| 5-14       | 2 - Social | Double pulse |
-| 15-29      | 3 - Networker | Triple pulse |
-| 30-49      | 4 - Connector | Fast pulse (2Hz) |
-| 50+        | 5 - Legend | Rainbow/special pattern |
+
+| Encounters | Level | Name |
+|------------|-------|------|
+| 0-4        | 1 | Newcomer |
+| 5-14       | 2 | Social |
+| 15-29      | 3 | Networker |
+| 30-49      | 4 | Connector |
+| 50+        | 5 | Legend |
+
+#### Level Display per LED Configuration
+
+**Option A (1x RGB):**
+| Level | Pattern |
+|-------|---------|
+| 1 | Slow pulse (1Hz), blue |
+| 2 | Double pulse, green |
+| 3 | Triple pulse, yellow |
+| 4 | Fast pulse (2Hz), orange |
+| 5 | Rainbow cycle |
+
+**Option B (5x RGB) & Option C (5x Single):**
+| Level | LEDs Lit | Effect |
+|-------|----------|--------|
+| 1 | ●○○○○ | 1 LED breathing |
+| 2 | ●●○○○ | 2 LEDs breathing |
+| 3 | ●●●○○ | 3 LEDs breathing |
+| 4 | ●●●●○ | 4 LEDs breathing |
+| 5 | ●●●●● | All 5, rainbow wave (RGB) or chase (single) |
 
 ### 3.5 Interaction Feedback
 - **New encounter**: LED flashes green 3x rapidly + optional beep
@@ -203,13 +241,17 @@ When organizer reads encounters from a badge, the data can be output via:
 ## 5. User Interface
 
 ### 5.1 LED Indicators
-- **Idle**: Slow breathing effect at current level color
-- **Searching**: Periodic dim flash
-- **Transmitting**: Solid dim
-- **Receiving**: Brightening pulse
-- **Success**: Rapid green flashes
-- **Already met**: Single yellow flash
-- **Error**: Red flash
+
+| State | 1x RGB | 5x RGB / 5x Single |
+|-------|--------|-------------------|
+| Idle | Breathing at level color | N LEDs lit (N = level) |
+| Searching | Periodic dim flash | Sweep animation |
+| Transmitting | Solid dim blue | Center LED on |
+| Receiving | Brightening pulse | Fill from edges |
+| Success | 3x green flash | All flash green (or on) |
+| Already met | 1x yellow flash | 1x outer flash |
+| Error | 1x red flash | All flash red (or blink) |
+| Level up | Rainbow burst | Sequential fill + flash |
 
 ### 5.2 Buzzer Feedback (Optional)
 - **New encounter**: Short beep
@@ -258,13 +300,21 @@ When organizer reads encounters from a badge, the data can be output via:
 - **Sleep**: Deep sleep, wake on timer (periodic beacon)
 
 ### 7.2 Power Budget
+
 | Component | Active | Idle |
 |-----------|--------|------|
 | CH32V003  | 5mA    | 10µA |
 | IR LED    | 20mA   | 0mA  |
 | IR RX     | 1mA    | 1mA  |
-| Status LED| 10mA   | 1mA  |
-| **Total** | 36mA   | ~1mA |
+
+**LED Power (depends on config):**
+| Option | Active (max) | Idle (breathing) |
+|--------|--------------|------------------|
+| A: 1x RGB | 60mA | 5mA |
+| B: 5x RGB | 300mA | 25mA |
+| C: 5x Single | 50mA | 10mA |
+
+**Typical total:** 30-80mA active, 5-15mA idle
 
 ---
 
@@ -308,13 +358,19 @@ When organizer reads encounters from a badge, the data can be output via:
 | MCU | CH32V003F4U6 | 1 | TSSOP-20 |
 | IR LED | TSAL6200 | 1 | 940nm |
 | IR Receiver | TSOP38238 | 1 | 38kHz |
-| RGB LED | WS2812B-Mini | 1 | Or discrete RGB |
 | Tactile Switch | 6x6mm | 1 | Reset/status button |
 | Piezo Buzzer | 5mm | 1 | Optional |
 | Resistor 100Ω | 0402 | 1 | IR LED current limit |
 | Resistor 10kΩ | 0402 | 1 | Pull-up |
 | Capacitor 100nF | 0402 | 2 | Decoupling |
 | SAO Header | 2x3 1.27mm | 1 | v1.69bis compatible |
+
+**LED Options (choose one):**
+| Option | Components | GPIOs needed |
+|--------|------------|--------------|
+| A: 1x RGB | 1x WS2812B-Mini | 1 (data) |
+| B: 5x RGB | 5x WS2812B-Mini | 1 (data, chained) |
+| C: 5x Single | 5x LED 0603 + 5x 100Ω | 5 (direct drive) |
 
 ---
 
